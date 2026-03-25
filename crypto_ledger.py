@@ -43,14 +43,17 @@ def verify_evidence_ledger(evidence_id):
     Audits the entire chain of custody for a single piece of evidence.
     Recalculates every hash to mathematically prove the database hasn't been tampered with.
     """
-    with db_manager.get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM chain_of_custody 
-            WHERE evidence_id = ? 
-            ORDER BY transfer_id ASC
-        ''', (evidence_id,))
-        records = [dict(row) for row in cursor.fetchall()]
+    conn = db_manager.get_db_connection()
+    cursor = conn.cursor(dictionary=True) 
+    
+    cursor.execute('''
+        SELECT * FROM chain_of_custody 
+        WHERE evidence_id = %s 
+        ORDER BY transfer_id ASC
+    ''', (evidence_id,))
+    
+    records = cursor.fetchall()
+    conn.close()
         
     if not records:
         return False, "No records found for this evidence ID."
@@ -58,6 +61,9 @@ def verify_evidence_ledger(evidence_id):
     expected_previous = "GENESIS_HASH"
     
     for row in records:
+        if 'transfer_time' in row and hasattr(row['transfer_time'], 'isoformat'):
+             row['transfer_time'] = row['transfer_time'].isoformat()
+             
         if row['previous_hash'] != expected_previous:
             return False, f"Integrity Failure: Broken chain at Transfer ID {row['transfer_id']}"
             
@@ -69,3 +75,23 @@ def verify_evidence_ledger(evidence_id):
         expected_previous = recalculated_hash
         
     return True, "Ledger is mathematically intact. All hashes verified."
+
+def generate_file_hash(file_bytes):
+    """
+    Takes raw bytes from a Streamlit file upload (e.g., CCTV footage, hard drive image)
+    and generates a SHA-256 hash to prove the digital evidence has not been tampered with.
+    """
+    file_hash = hashlib.sha256()
+    file_hash.update(file_bytes)
+    return file_hash.hexdigest()
+
+def verify_digital_evidence(uploaded_file_bytes, stored_db_hash):
+    """
+    Compares an uploaded file against the hash stored in the database 
+    to verify it hasn't been corrupted or altered.
+    """
+    current_hash = generate_file_hash(uploaded_file_bytes)
+    if current_hash == stored_db_hash:
+        return True, "Match: Digital evidence is intact and untampered."
+    else:
+        return False, "ALERT: File hash mismatch. This digital evidence has been altered!"

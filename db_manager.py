@@ -157,3 +157,73 @@ def get_all_evidence():
     results = cursor.fetchall()
     conn.close()
     return results
+
+def link_evidence_to_case(case_id, evidence_id, linked_by_badge, notes):
+    """Junction table insert: Links one piece of evidence to multiple cases."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO case_evidence_map (case_id, evidence_id, linked_by_badge, link_date, notes)
+            VALUES (%s, %s, %s, NOW(), %s)
+        ''', (case_id, evidence_id, linked_by_badge, notes))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error linking case/evidence: {e}")
+        return False
+    finally:
+        conn.close()
+
+def log_lab_analysis_request(evidence_id, requested_by_badge, test_type):
+    """Requests a lab test (e.g., DNA, Toxicology) for an item."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO lab_analysis (evidence_id, requested_by_badge, test_type, request_date)
+            VALUES (%s, %s, %s, NOW())
+        ''', (evidence_id, requested_by_badge, test_type))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error requesting lab analysis: {e}")
+        return False
+    finally:
+        conn.close()
+
+def log_legal_disposition(evidence_id, action_type, authorized_by_badge, court_order):
+    """Logs the final lifecycle event of an item (e.g., Destroyed, Returned)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO legal_dispositions (evidence_id, action_type, authorized_by_badge, action_date, court_order_reference)
+            VALUES (%s, %s, %s, NOW(), %s)
+        ''', (evidence_id, action_type, authorized_by_badge, court_order))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error logging disposition: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_full_chain_of_custody(evidence_id):
+    """Fetches the CoC history with actual officer names for court reporting."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT c.transfer_time, c.reason, 
+               p1.last_name AS transferred_by_name, 
+               p2.last_name AS received_by_name, 
+               c.current_hash
+        FROM chain_of_custody c
+        JOIN personnel p1 ON c.transferred_by_badge = p1.badge_number
+        JOIN personnel p2 ON c.received_by_badge = p2.badge_number
+        WHERE c.evidence_id = %s
+        ORDER BY c.transfer_time ASC
+    ''', (evidence_id,))
+    results = cursor.fetchall()
+    conn.close()
+    return results
