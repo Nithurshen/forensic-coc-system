@@ -4,48 +4,60 @@ import os
 
 load_dotenv()
 
+
 def get_db_connection():
     """Establish connection to the MySQL server using environment variables."""
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
+        database=os.getenv("DB_NAME"),
     )
+
 
 def get_latest_hash(evidence_id):
     """Fetches the CurrentHash of the most recent transfer for a specific item."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute('''
+
+    cursor.execute(
+        """
         SELECT current_hash 
         FROM chain_of_custody 
         WHERE evidence_id = %s 
         ORDER BY transfer_id DESC 
         LIMIT 1
-    ''', (evidence_id,))
+    """,
+        (evidence_id,),
+    )
     result = cursor.fetchone()
-    
+
     conn.close()
-    return result['current_hash'] if result else "GENESIS_HASH"
+    return result["current_hash"] if result else "GENESIS_HASH"
+
 
 def insert_transfer(payload):
     """Inserts a newly hashed transfer payload into the MySQL database."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO chain_of_custody (
                 evidence_id, transferred_by_badge, received_by_badge, 
                 reason, transfer_time, previous_hash, current_hash
             ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            payload['evidence_id'], payload['transferred_by_badge'], 
-            payload['received_by_badge'], payload['reason'], 
-            payload['transfer_time'], payload['previous_hash'], 
-            payload['current_hash']
-        ))
+        """,
+            (
+                payload["evidence_id"],
+                payload["transferred_by_badge"],
+                payload["received_by_badge"],
+                payload["reason"],
+                payload["transfer_time"],
+                payload["previous_hash"],
+                payload["current_hash"],
+            ),
+        )
         conn.commit()
         last_id = cursor.lastrowid
         return last_id
@@ -55,15 +67,19 @@ def insert_transfer(payload):
     finally:
         conn.close()
 
+
 def insert_personnel(badge, first, last, dept, clearance):
     """Helper function to seed the database with users."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO personnel (badge_number, first_name, last_name, department, clearance_level)
             VALUES (%s, %s, %s, %s, %s)
-        ''', (badge, first, last, dept, clearance))
+        """,
+            (badge, first, last, dept, clearance),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -71,6 +87,7 @@ def insert_personnel(badge, first, last, dept, clearance):
         return False
     finally:
         conn.close()
+
 
 def get_all_personnel():
     """Fetches personnel for Streamlit Dropdowns."""
@@ -81,15 +98,19 @@ def get_all_personnel():
     conn.close()
     return results
 
+
 def insert_storage_location(location_id, facility, room, storage_type, req_temp):
     """Adds a new storage location (e.g., Freezer A)."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO storage_locations (location_id, facility_name, room_number, storage_type, requires_temp_monitoring)
             VALUES (%s, %s, %s, %s, %s)
-        ''', (location_id, facility, room, storage_type, req_temp))
+        """,
+            (location_id, facility, room, storage_type, req_temp),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -98,23 +119,30 @@ def insert_storage_location(location_id, facility, room, storage_type, req_temp)
     finally:
         conn.close()
 
+
 def get_all_storage_locations():
     """Fetches storage locations for Streamlit Dropdowns."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT location_id, facility_name, room_number FROM storage_locations")
+    cursor.execute(
+        "SELECT location_id, facility_name, room_number FROM storage_locations"
+    )
     results = cursor.fetchall()
     conn.close()
     return results
+
 
 def insert_case(case_id, investigator_badge, status, created_at):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO cases (case_id, lead_investigator_badge, status, created_at)
             VALUES (%s, %s, %s, %s)
-        ''', (case_id, investigator_badge, status, created_at))
+        """,
+            (case_id, investigator_badge, status, created_at),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -122,6 +150,7 @@ def insert_case(case_id, investigator_badge, status, created_at):
         return False
     finally:
         conn.close()
+
 
 def get_all_cases():
     conn = get_db_connection()
@@ -131,20 +160,29 @@ def get_all_cases():
     conn.close()
     return results
 
+
 def insert_evidence(payload):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO evidence (
                 evidence_id, item_type, description, collection_location, 
                 collected_by_badge, collected_at, digital_hash, current_location_id
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            payload['evidence_id'], payload['item_type'], payload['description'], 
-            payload['collection_location'], payload['collected_by_badge'], 
-            payload['collected_at'], payload['digital_hash'], payload['current_location_id']
-        ))
+        """,
+            (
+                payload["evidence_id"],
+                payload["item_type"],
+                payload["description"],
+                payload["collection_location"],
+                payload["collected_by_badge"],
+                payload["collected_at"],
+                payload["digital_hash"],
+                payload["current_location_id"],
+            ),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -152,6 +190,7 @@ def insert_evidence(payload):
         return False
     finally:
         conn.close()
+
 
 def get_all_evidence():
     """Fetches evidence items to populate the Transfer Custody dropdown."""
@@ -162,15 +201,19 @@ def get_all_evidence():
     conn.close()
     return results
 
+
 def link_evidence_to_case(case_id, evidence_id, linked_by_badge, notes):
     """Junction table insert: Links one piece of evidence to multiple cases."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO case_evidence_map (case_id, evidence_id, linked_by_badge, link_date, notes)
             VALUES (%s, %s, %s, NOW(), %s)
-        ''', (case_id, evidence_id, linked_by_badge, notes))
+        """,
+            (case_id, evidence_id, linked_by_badge, notes),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -179,15 +222,19 @@ def link_evidence_to_case(case_id, evidence_id, linked_by_badge, notes):
     finally:
         conn.close()
 
+
 def log_lab_analysis_request(evidence_id, requested_by_badge, test_type):
     """Requests a lab test (e.g., DNA, Toxicology) for an item."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO lab_analysis (evidence_id, requested_by_badge, test_type, request_date)
             VALUES (%s, %s, %s, NOW())
-        ''', (evidence_id, requested_by_badge, test_type))
+        """,
+            (evidence_id, requested_by_badge, test_type),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -196,15 +243,16 @@ def log_lab_analysis_request(evidence_id, requested_by_badge, test_type):
     finally:
         conn.close()
 
-def log_legal_disposition(evidence_id, action_type, authorized_by_badge, court_order):
-    """Logs the final lifecycle event of an item (e.g., Destroyed, Returned)."""
+
+def log_legal_disposition(evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order):
+    """Update to include the required witness parameter."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            INSERT INTO legal_dispositions (evidence_id, action_type, authorized_by_badge, action_date, court_order_reference)
-            VALUES (%s, %s, %s, NOW(), %s)
-        ''', (evidence_id, action_type, authorized_by_badge, court_order))
+            INSERT INTO legal_dispositions (evidence_id, action_type, authorized_by_badge, witnessed_by_badge, action_date, court_order_reference)
+            VALUES (%s, %s, %s, %s, NOW(), %s)
+        ''', (evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order))
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -217,7 +265,8 @@ def get_full_chain_of_custody(evidence_id):
     """Fetches the CoC history with actual officer names for court reporting."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('''
+    cursor.execute(
+        """
         SELECT c.transfer_time, c.reason, 
                p1.last_name AS transferred_by_name, 
                p2.last_name AS received_by_name, 
@@ -227,28 +276,32 @@ def get_full_chain_of_custody(evidence_id):
         JOIN personnel p2 ON c.received_by_badge = p2.badge_number
         WHERE c.evidence_id = %s
         ORDER BY c.transfer_time ASC
-    ''', (evidence_id,))
+    """,
+        (evidence_id,),
+    )
     results = cursor.fetchall()
     conn.close()
     return results
+
 
 def get_dashboard_stats():
     """Returns counts for the main UI dashboard."""
     conn = get_db_connection()
     cursor = conn.cursor()
     stats = {}
-    
+
     cursor.execute("SELECT COUNT(*) FROM cases")
-    stats['total_cases'] = cursor.fetchone()[0]
-    
+    stats["total_cases"] = cursor.fetchone()[0]
+
     cursor.execute("SELECT COUNT(*) FROM evidence")
-    stats['total_evidence'] = cursor.fetchone()[0]
-    
+    stats["total_evidence"] = cursor.fetchone()[0]
+
     cursor.execute("SELECT COUNT(*) FROM lab_analysis WHERE status = 'Pending'")
-    stats['pending_labs'] = cursor.fetchone()[0]
-    
+    stats["pending_labs"] = cursor.fetchone()[0]
+
     conn.close()
     return stats
+
 
 def search_evidence(search_query):
     """Allows searching evidence by description or ID."""
@@ -260,6 +313,7 @@ def search_evidence(search_query):
     results = cursor.fetchall()
     conn.close()
     return results
+
 
 def get_cases_for_evidence(evidence_id):
     """Retrieves all cases linked to a specific piece of evidence (Junction Query)."""
@@ -275,15 +329,57 @@ def get_cases_for_evidence(evidence_id):
     conn.close()
     return results
 
+
 def log_audit_result(evidence_id, result_message, status):
     """Logs the results of a cryptographic integrity check."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO system_audit_logs (evidence_id, result_message, status, audit_time)
             VALUES (%s, %s, %s, NOW())
-        ''', (evidence_id, result_message, status))
+        """,
+            (evidence_id, result_message, status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def update_lab_results(request_id, summary, file_path, equipment):
+    """Updates a pending lab request with final results."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE lab_analysis 
+            SET result_summary = %s, report_file_path = %s, 
+                equipment_used = %s, status = 'Completed', completed_at = NOW()
+            WHERE request_id = %s
+        """,
+            (summary, file_path, equipment, request_id),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def log_temperature(location_id, temp):
+    """Records a temperature reading for environmental evidence preservation."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    alert = True if temp > -10.0 else False
+    try:
+        cursor.execute(
+            """
+            INSERT INTO temperature_logs (location_id, recorded_at, temperature_celsius, alert_triggered)
+            VALUES (%s, NOW(), %s, %s)
+        """,
+            (location_id, temp, alert),
+        )
         conn.commit()
     finally:
         conn.close()

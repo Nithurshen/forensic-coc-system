@@ -4,23 +4,25 @@ import os
 
 load_dotenv()
 
+
 def get_connection():
     """Establish connection to the MySQL server using environment variables."""
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
+        database=os.getenv("DB_NAME"),
     )
+
 
 def initialize_database():
     print("Connecting to MySQL server...")
-    
+
     # Connect without a database initially to create it
     temp_conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST"), 
-        user=os.getenv("DB_USER"), 
-        password=os.getenv("DB_PASSWORD")
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
     )
     temp_cursor = temp_conn.cursor()
     temp_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {os.getenv('DB_NAME')}")
@@ -31,7 +33,7 @@ def initialize_database():
 
     print("Building tables...")
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS personnel (
         badge_number VARCHAR(50) PRIMARY KEY,
         first_name VARCHAR(100) NOT NULL,
@@ -40,9 +42,9 @@ def initialize_database():
         clearance_level INT DEFAULT 1,
         status VARCHAR(50) DEFAULT 'Active'
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS cases (
         case_id VARCHAR(255) PRIMARY KEY,
         lead_investigator_badge VARCHAR(50) NOT NULL,
@@ -50,9 +52,9 @@ def initialize_database():
         created_at DATETIME NOT NULL,
         FOREIGN KEY (lead_investigator_badge) REFERENCES personnel(badge_number)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS storage_locations (
         location_id VARCHAR(100) PRIMARY KEY,
         facility_name VARCHAR(100) NOT NULL,
@@ -60,9 +62,9 @@ def initialize_database():
         storage_type VARCHAR(50) NOT NULL,
         requires_temp_monitoring BOOLEAN DEFAULT FALSE
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS evidence (
         evidence_id VARCHAR(255) PRIMARY KEY,
         item_type VARCHAR(100) NOT NULL,
@@ -75,9 +77,9 @@ def initialize_database():
         FOREIGN KEY (collected_by_badge) REFERENCES personnel(badge_number),
         FOREIGN KEY (current_location_id) REFERENCES storage_locations(location_id)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS case_evidence_map (
         map_id INT AUTO_INCREMENT PRIMARY KEY,
         case_id VARCHAR(255) NOT NULL,
@@ -89,9 +91,9 @@ def initialize_database():
         FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id),
         FOREIGN KEY (linked_by_badge) REFERENCES personnel(badge_number)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS chain_of_custody (
         transfer_id INT AUTO_INCREMENT PRIMARY KEY,
         evidence_id VARCHAR(255) NOT NULL,
@@ -105,9 +107,9 @@ def initialize_database():
         FOREIGN KEY (transferred_by_badge) REFERENCES personnel(badge_number),
         FOREIGN KEY (received_by_badge) REFERENCES personnel(badge_number)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS lab_analysis (
         request_id INT AUTO_INCREMENT PRIMARY KEY,
         evidence_id VARCHAR(255) NOT NULL,
@@ -122,9 +124,9 @@ def initialize_database():
         FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id),
         FOREIGN KEY (requested_by_badge) REFERENCES personnel(badge_number)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS temperature_logs (
         log_id INT AUTO_INCREMENT PRIMARY KEY,
         location_id VARCHAR(100) NOT NULL,
@@ -133,9 +135,9 @@ def initialize_database():
         alert_triggered BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (location_id) REFERENCES storage_locations(location_id)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS legal_dispositions (
         disposition_id INT AUTO_INCREMENT PRIMARY KEY,
         evidence_id VARCHAR(255) NOT NULL,
@@ -148,9 +150,9 @@ def initialize_database():
         FOREIGN KEY (authorized_by_badge) REFERENCES personnel(badge_number),
         FOREIGN KEY (witnessed_by_badge) REFERENCES personnel(badge_number)
     )
-    ''')
+    """)
 
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS system_audit_logs (
         audit_id INT AUTO_INCREMENT PRIMARY KEY,
         evidence_id VARCHAR(255),
@@ -158,11 +160,12 @@ def initialize_database():
         status VARCHAR(50), -- 'Pass' or 'Fail'
         audit_time DATETIME
     )
-    ''')
+    """)
 
     conn.commit()
     conn.close()
     print("Complete MySQL Forensic Schema initialized successfully!")
+
 
 if __name__ == "__main__":
     initialize_database()
