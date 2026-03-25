@@ -76,3 +76,84 @@ def get_all_personnel():
     results = cursor.fetchall()
     conn.close()
     return results
+
+def insert_storage_location(location_id, facility, room, storage_type, req_temp):
+    """Adds a new storage location (e.g., Freezer A)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO storage_locations (location_id, facility_name, room_number, storage_type, requires_temp_monitoring)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (location_id, facility, room, storage_type, req_temp))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error inserting storage: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_all_storage_locations():
+    """Fetches storage locations for Streamlit Dropdowns."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT location_id, facility_name, room_number FROM storage_locations")
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+def insert_case(case_id, investigator_badge, status, created_at):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO cases (case_id, lead_investigator_badge, status, created_at)
+            VALUES (%s, %s, %s, %s)
+        ''', (case_id, investigator_badge, status, created_at))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error inserting case: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_all_cases():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT case_id, status FROM cases")
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+def insert_evidence(payload):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO evidence (
+                evidence_id, item_type, description, collection_location, 
+                collected_by_badge, collected_at, digital_hash, current_location_id
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            payload['evidence_id'], payload['item_type'], payload['description'], 
+            payload['collection_location'], payload['collected_by_badge'], 
+            payload['collected_at'], payload['digital_hash'], payload['current_location_id']
+        ))
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error inserting evidence: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_all_evidence():
+    """Fetches evidence items to populate the Transfer Custody dropdown."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT evidence_id, description FROM evidence")
+    results = cursor.fetchall()
+    conn.close()
+    return results
