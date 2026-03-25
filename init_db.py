@@ -156,10 +156,12 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS system_audit_logs (
         audit_id INT AUTO_INCREMENT PRIMARY KEY,
-        evidence_id VARCHAR(255),
+        evidence_id VARCHAR(255) NOT NULL, -- Added NOT NULL for stricter integrity
         result_message TEXT,
         status VARCHAR(50), -- 'Pass' or 'Fail'
-        audit_time DATETIME
+        audit_time DATETIME,
+        -- Add this line to create the formal link:
+        FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id)
     )
     """)
 
