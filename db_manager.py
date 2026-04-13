@@ -12,7 +12,7 @@ def get_db_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME"),
-        auth_plugin='mysql_native_password'
+        auth_plugin="mysql_native_password",
     )
 
 
@@ -245,15 +245,26 @@ def log_lab_analysis_request(evidence_id, requested_by_badge, test_type):
         conn.close()
 
 
-def log_legal_disposition(evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order):
+def log_legal_disposition(
+    evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order
+):
     """Update to include the required witness parameter."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO legal_dispositions (evidence_id, action_type, authorized_by_badge, witnessed_by_badge, action_date, court_order_reference)
             VALUES (%s, %s, %s, %s, NOW(), %s)
-        ''', (evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order))
+        """,
+            (
+                evidence_id,
+                action_type,
+                authorized_by_badge,
+                witnessed_by_badge,
+                court_order,
+            ),
+        )
         conn.commit()
         return True
     except mysql.connector.Error as e:
@@ -261,6 +272,7 @@ def log_legal_disposition(evidence_id, action_type, authorized_by_badge, witness
         return False
     finally:
         conn.close()
+
 
 def get_full_chain_of_custody(evidence_id):
     """Fetches the CoC history with actual officer names for court reporting."""
@@ -384,3 +396,83 @@ def log_temperature(location_id, temp):
         conn.commit()
     finally:
         conn.close()
+
+
+def insert_personnel(badge, username, password_hash, first, last, dept, clearance):
+    """Helper function to create new officer accounts."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO personnel (badge_number, username, password_hash, first_name, last_name, department, clearance_level)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+            (badge, username, password_hash, first, last, dept, clearance),
+        )
+        conn.commit()
+        return True
+    except mysql.connector.Error as e:
+        print(f"DB Error inserting personnel: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def authenticate_officer(username, password_str):
+    """Checks credentials and returns the user record if valid."""
+    import crypto_ledger
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT * FROM personnel WHERE username = %s AND status = 'Active'", (username,)
+    )
+    user = cursor.fetchone()
+    conn.close()
+
+    if user and crypto_ledger.verify_password(password_str, user["password_hash"]):
+        return user
+    return None
+
+
+def get_full_evidence_registry():
+    """Fetches all evidence fields for the dashboard registry display."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT evidence_id, item_type, description, current_location_id FROM evidence"
+    )
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+
+def get_items_needing_attention():
+    """Fetches items in temporary/improvised storage or with failed cryptographic audits."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT e.evidence_id, e.description, l.storage_type AS current_security_status
+        FROM evidence e
+        JOIN storage_locations l ON e.current_location_id = l.location_id
+        WHERE l.storage_type LIKE '%Temporary%' 
+        OR l.storage_type LIKE '%Holding%'
+        OR e.evidence_id IN (
+            SELECT evidence_id FROM system_audit_logs WHERE status = 'Fail'
+        )
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+
+def get_full_storage_locations():
+    """Fetches all storage location data for the management UI."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM storage_locations")
+    results = cursor.fetchall()
+    conn.close()
+    return results

@@ -12,7 +12,7 @@ def get_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME"),
-        auth_plugin='mysql_native_password'
+        auth_plugin="mysql_native_password",
     )
 
 
@@ -23,7 +23,7 @@ def initialize_database():
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        auth_plugin='mysql_native_password'
+        auth_plugin="mysql_native_password",
     )
     temp_cursor = temp_conn.cursor()
     temp_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {os.getenv('DB_NAME')}")
@@ -35,9 +35,16 @@ def initialize_database():
     print("Dropping existing tables for a clean reset...")
     # Drop tables in reverse order of dependencies
     tables_to_drop = [
-        "system_audit_logs", "legal_dispositions", "temperature_logs",
-        "lab_analysis", "chain_of_custody", "case_evidence_map",
-        "evidence", "storage_locations", "cases", "personnel"
+        "system_audit_logs",
+        "legal_dispositions",
+        "temperature_logs",
+        "lab_analysis",
+        "chain_of_custody",
+        "case_evidence_map",
+        "evidence",
+        "storage_locations",
+        "cases",
+        "personnel",
     ]
     for table in tables_to_drop:
         cursor.execute(f"DROP TABLE IF EXISTS {table}")
@@ -49,6 +56,8 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS personnel (
         badge_number VARCHAR(50) PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
         first_name VARCHAR(100) NOT NULL,
         last_name VARCHAR(100) NOT NULL,
         department VARCHAR(100) NOT NULL,

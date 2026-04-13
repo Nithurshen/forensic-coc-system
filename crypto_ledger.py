@@ -4,8 +4,21 @@ import db_manager
 import datetime
 import os
 from dotenv import load_dotenv
+import bcrypt
 
 load_dotenv()
+
+
+def hash_password(password_str):
+    """Generates a secure bcrypt hash for a new password."""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password_str.encode("utf-8"), salt).decode("utf-8")
+
+
+def verify_password(password_str, hashed_str):
+    """Verifies a plaintext password against the stored bcrypt hash."""
+    return bcrypt.checkpw(password_str.encode("utf-8"), hashed_str.encode("utf-8"))
+
 
 def process_new_transfer(transfer_payload):
     """
