@@ -80,12 +80,8 @@ if not st.session_state["logged_in"]:
                             "Failed to create account. Badge number or Username may already exist."
                         )
 
-    st.stop()  # Halts execution here until the user successfully logs in
+    st.stop()
 
-# --- MAIN SECURE APPLICATION ---
-# (This code only runs if st.session_state['logged_in'] == True)
-
-# Display Logged-in User in Sidebar
 user_data = st.session_state["current_user"]
 st.sidebar.success(
     f"Logged in as: {user_data['first_name']} {user_data['last_name']} ({user_data['badge_number']})"
@@ -124,10 +120,8 @@ if menu == "Dashboard":
         "Welcome to the secure portal. Navigate using the sidebar to log evidence or initiate transfers."
     )
 
-    # --- 50/50 Split Layout ---
     dash_col1, dash_col2 = st.columns(2)
 
-    # Left Side: Evidence Registry
     with dash_col1:
         st.subheader("📋 Evidence Registry")
         search_query = st.text_input("Search Registry by ID or Description")
@@ -139,13 +133,11 @@ if menu == "Dashboard":
 
         if results:
             df_reg = pd.DataFrame(results)
-            # Clean column names for presentation
             df_reg.columns = [col.replace("_", " ").title() for col in df_reg.columns]
             st.dataframe(df_reg, use_container_width=True, height=350)
         else:
             st.info("No items found in the registry.")
 
-    # Right Side: Security Alerts / Needs Attention
     with dash_col2:
         st.subheader("⚠️ Needs Attention")
         st.write(
@@ -158,7 +150,6 @@ if menu == "Dashboard":
             df_attn = pd.DataFrame(attn_items)
             df_attn.columns = [col.replace("_", " ").title() for col in df_attn.columns]
 
-            # Optional: Style the dataframe to make it look like an alert
             st.dataframe(
                 df_attn.style.applymap(
                     lambda x: "background-color: #ffcccc; color: black;"
@@ -172,11 +163,9 @@ if menu == "Dashboard":
 elif menu == "Log New Evidence":
     st.subheader("📦 Intake New Evidence")
 
-    # Fetch data for dropdowns
     personnel = db_manager.get_all_personnel()
     locations = db_manager.get_all_storage_locations()
 
-    # CRITICAL: Build options only if data exists to avoid KeyError: None
     officer_options = {
         f"{p['badge_number']} - {p['first_name']} {p['last_name']}": p["badge_number"]
         for p in personnel
@@ -193,7 +182,7 @@ elif menu == "Log New Evidence":
         st.info(
             "Please run 'python reset_system.py' in your terminal and refresh this page."
         )
-        st.stop()  # Stop execution to prevent the crash below
+        st.stop()
 
     with st.form("intake_form"):
         ev_id = st.text_input("Evidence ID (e.g., EV-1001)")
@@ -237,7 +226,6 @@ elif menu == "Log New Evidence":
                 }
 
                 if db_manager.insert_evidence(payload):
-                    # AUTOMATIC GENESIS TRANSFER
                     genesis_payload = {
                         "evidence_id": ev_id,
                         "transferred_by_badge": officer_options[collected_by],
@@ -260,7 +248,6 @@ elif menu == "Transfer Custody":
     st.subheader("🔗 Record a Chain of Custody Transfer")
     st.warning("Warning: Once submitted, this record is cryptographically sealed.")
 
-    # Fetch real data for dropdowns
     evidence_items = db_manager.get_all_evidence()
     personnel = db_manager.get_all_personnel()
 
@@ -315,7 +302,6 @@ elif menu == "Transfer Custody":
 elif menu == "Audit & Verify Ledger":
     st.subheader("🛡️ Verify Ledger Integrity (Court View)")
 
-    # CRITICAL: This line defines the variable before the button uses it
     audit_ev_id = st.text_input("Enter Evidence ID to Audit:")
 
     if st.button("Run Cryptographic Audit"):
@@ -328,7 +314,6 @@ elif menu == "Audit & Verify Ledger":
                     st.write("### Immutable Timeline")
                     st.dataframe(pd.DataFrame(history))
 
-                    # Generate PDF Report
                     report_data = generate_pdf_report(audit_ev_id, history)
                     st.download_button(
                         label="📄 Download Court Report (PDF)",
@@ -343,17 +328,13 @@ elif menu == "Digital Evidence Verification":
     st.subheader("🖥️ Digital Integrity Check")
     st.write("Upload a file to verify its hash against the court-recorded value.")
 
-    # 1. Select the evidence item
     evidence_items = db_manager.get_all_evidence()
     ev_options = {f"{e['evidence_id']}": e["evidence_id"] for e in evidence_items}
     selected_ev = st.selectbox("Select Digital Evidence ID", options=ev_options.keys())
 
-    # 2. Upload the file to check
     uploaded_file = st.file_uploader("Upload File (CCTV, Disk Image, etc.)")
 
     if uploaded_file and selected_ev:
-        # Fetch the hash originally stored in the DB
-        # Note: You may need Dev 1 to write a quick helper: db_manager.get_evidence_by_id()
         evidence_data = db_manager.search_evidence(selected_ev)[0]
         stored_hash = evidence_data["digital_hash"]
 
@@ -416,7 +397,6 @@ elif menu == "Manage Facilities":
 
     st.divider()
 
-    # Display the current registry of locations
     st.subheader("Current Storage Locations")
     locations = db_manager.get_full_storage_locations()
 

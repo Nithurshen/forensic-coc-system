@@ -4,7 +4,6 @@ import db_manager
 def seed_database():
     print("Seeding Storage Locations...")
 
-    # Temperature-Controlled Storage (Biological/Chemical)
     db_manager.insert_storage_location(
         "LOC-F1", "Main Lab", "Room 10", "Deep Freezer", True
     )
@@ -15,7 +14,6 @@ def seed_database():
         "LOC-T1", "Toxicology", "Room 11", "Chemical Fridge", True
     )
 
-    # Standard Secure Storage (Physical Items)
     db_manager.insert_storage_location(
         "LOC-S1", "Main Lab", "Room 12", "Secure Shelf", False
     )
@@ -26,7 +24,6 @@ def seed_database():
         "LOC-L1", "Evidence Vault", "Room 20", "Long-Term Bin", False
     )
 
-    # Specialized Storage (Weapons, Digital, Vehicles)
     db_manager.insert_storage_location(
         "LOC-G1", "Ballistics", "Room 15", "Weapons Lockbox", False
     )

@@ -33,7 +33,6 @@ def initialize_database():
     cursor = conn.cursor()
 
     print("Dropping existing tables for a clean reset...")
-    # Drop tables in reverse order of dependencies
     tables_to_drop = [
         "system_audit_logs",
         "legal_dispositions",
