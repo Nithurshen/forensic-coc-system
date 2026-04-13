@@ -1,69 +1,100 @@
-# Forensic Evidence & Chain of Custody System (forensic-coc-system)
+# Forensic Evidence & Chain of Custody System
 
-A high-security database system designed for crime laboratories and police departments to manage the collection, analysis, storage, and court presentation of forensic evidence. 
+This project is a high-integrity **Forensic Evidence Management System** designed to track physical and digital evidence from the moment of intake through its entire legal lifecycle. By utilizing cryptographic hashing and a linked-ledger architecture, the system ensures that the **Chain of Custody (CoC)** remains immutable and tamper-evident, meeting the rigorous standards required for court-admissible reporting.
 
-Unlike standard inventory applications, this system replaces traditional state changes with strict "transfers of custody" and prioritizes absolute data integrity. Evidence records are immutable, and every transfer is permanently recorded in a mathematically verifiable ledger to ensure strict court admissibility.
+---
 
-## The Core Innovation: Cryptographic Row-Linking
+## Key Features
 
-Standard SQL audit tables are vulnerable to manipulation by actors with database-level access. To mitigate this risk, `forensic-coc-system` implements a Tamper-Evident SQL Ledger directly within the relational database, avoiding the computational overhead of external blockchain infrastructure.
+* **Cryptographic Ledger**: Every transfer of custody is hashed and linked to the previous record, creating a mathematical "chain" that detects any unauthorized database tampering.
+* **Digital Integrity Verification**: Allows investigators to upload digital files (CCTV, disk images) and verify their SHA-256 hashes against the original intake record.
+* **Secure Authentication**: Role-based access control using `bcrypt` password hashing for forensic officers and lab technicians.
+* **Automated Court Reporting**: Generates official PDF Chain of Custody reports containing timestamps, officer identities, and cryptographic signatures.
+* **Facility Management**: Tracks evidence across various specialized environments, including biohazard refrigerators, Faraday lockers, and vehicle impounds.
+* **Audit Dashboard**: Real-time overview of total cases, pending lab requests, and items requiring immediate attention (e.g., items in temporary holding).
 
-Every transfer of custody generates a `CurrentHash` alongside a `PreviousHash`. When a new transfer occurs, the system calculates a SHA-256 hash combining the new transaction payload with the hash of the preceding transaction for that specific item. 
+---
 
-> **Result:** If any historical record (such as a timestamp or location) is manually altered at the database level, the subsequent mathematical chain is instantly invalidated. The built-in ledger verification tool recalculates these hashes in real-time, providing cryptographic proof of database integrity for legal scrutiny.
+## Tech Stack
 
-## Technical Stack
+* **Frontend**: Streamlit (Python-based Web UI)
+* **Database**: MySQL (Relational storage for evidence, personnel, and logs)
+* **Security**: `bcrypt` (password hashing), `hashlib` (SHA-256 for ledger integrity)
+* **Reporting**: `fpdf` (PDF generation)
+* **Environment**: `python-dotenv` for secure credential management
 
-* **Frontend:** Streamlit (Python) for rapid deployment and state management.
-* **Backend Logic:** Python (`hashlib` for cryptography, `pandas` for data structuring).
-* **Database:** SQL (SQLite for initial development and prototyping; architected for migration to PostgreSQL in production environments).
+---
 
-## Architecture & Division of Labor
+## Prerequisites
 
-This project utilizes a decoupled architecture to facilitate parallel development across a four-person team:
+Before running the system, ensure you have the following installed:
+* Python 3.8+
+* MySQL Server
+* A tool to manage Python environments (like `venv` or `conda`)
 
-* **Database Administration (DBA):** Manages the relational SQL schema, enforces foreign key constraints, and optimizes query execution.
-* **Backend Cryptography:** Develops the SHA-256 hashing logic, manages digital evidence hashing, and maintains the ledger verification loops.
-* **Frontend Architecture:** Constructs the Streamlit interface, user workflows, and secure data-entry forms.
-* **System Integration:** Connects backend cryptographic states to the frontend UI and orchestrates automated, court-compliant reporting mechanisms.
+---
 
-## Key System Features
+## Installation & Setup
 
-* **Evidence Intake & Cataloging:** Secure logging of physical and biological items with precise metadata (GPS coordinates, collection personnel, environmental parameters).
-* **Immutable Chain of Custody:** Continuous, append-only tracking of item possession, including authorized personnel, timestamps, and transfer rationales.
-* **Laboratory Analysis Tracking:** Relational linking of evidence items to analysis requests, analytical reports (e.g., toxicology), and equipment calibration logs.
-* **Secure Storage Management:** Granular inventory control mapping items to specific shelves, bins, or temperature-controlled freezer units.
-* **Automated Court Reporting:** Generation of formatted, continuously linked Chain of Custody timelines designed specifically for legal proceedings.
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd forensic-coc-system
+```
 
-## Getting Started (Development Setup)
+### 2. Install Dependencies
+Install the required libraries listed in `requirements.txt`:
+```bash
+pip install -r requirements.txt
+```
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/your-org/forensic-coc-system.git](https://github.com/your-org/forensic-coc-system.git)
-   cd forensic-coc-system
-   ```
+### 3. Database Configuration
+Create a `.env` file in the root directory and provide your MySQL credentials:
+```env
+DB_HOST=localhost
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=forensic_db
+SECRET_KEY=your_secure_salt_string
+```
 
-2. **Initialize a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
-   ```
+### 4. Initialize and Seed the System
+Run the reset script to create the database schema and populate initial storage locations (Freezers, Vaults, etc.):
+```bash
+python reset_system.py
+```
 
-3. **Install required dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-4. **Initialize the local database:**
-   ```bash
-   python scripts/init_db.py
-   ```
+## Usage Guide
 
-5. **Launch the application:**
-   ```bash
-   streamlit run app.py
-   ```
+### 1. Launch the Application
+Start the Streamlit web interface:
+```bash
+streamlit run app.py
+```
 
-## Security Note
+### 2. User Registration & Login
+* **Register**: Navigate to the "Register Officer" tab to create your account.
+* **Login**: Use your credentials to access the secure dashboard.
 
-This architecture relies heavily on cryptographic hashing for data verification. Ensure that all database connection strings, secret keys, and environment variables are strictly isolated and secured before deploying to any staging or production environments. Do not commit `.env` files to version control.
+### 3. Logging New Evidence
+* Go to **Log New Evidence**.
+* Enter the Evidence ID and description.
+* If the evidence is digital, upload the file to generate its "Genesis Hash."
+* Assign a storage location (e.g., "LOC-F1 Deep Freezer").
+
+### 4. Performing a Transfer
+* Select **Transfer Custody**.
+* Identify the item and the personnel involved.
+* Once submitted, the system automatically links the new transfer to the previous hash, sealing the record.
+
+### 5. Auditing for Court
+* Select **Audit & Verify Ledger**.
+* Enter an Evidence ID to trigger a full cryptographic audit.
+* If the chain is intact, click **Download Court Report (PDF)** to generate the official documentation.
+
+---
+
+## License
+This project is licensed under the **Apache License 2.0**. You may obtain a copy of the License at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0). See the `LICENSE` file for details on permissions and limitations.
