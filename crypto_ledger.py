@@ -105,6 +105,12 @@ def verify_digital_evidence(uploaded_file_bytes, stored_db_hash):
 
 def generate_row_hash(payload_dict):
     hash_data = payload_dict.copy()
+
+    if "current_hash" in hash_data:
+        del hash_data["current_hash"]
+    if "transfer_id" in hash_data:
+        del hash_data["transfer_id"]
+
     if "current_hash" in hash_data:
         del hash_data["current_hash"]
 

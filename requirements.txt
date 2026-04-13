@@ -2,3 +2,4 @@ mysql-connector
 python-dotenv
 cryptography
 ruff
+fpdf

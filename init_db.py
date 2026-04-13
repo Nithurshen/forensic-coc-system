@@ -32,6 +32,18 @@ def initialize_database():
     conn = get_connection()
     cursor = conn.cursor()
 
+    print("Dropping existing tables for a clean reset...")
+    # Drop tables in reverse order of dependencies
+    tables_to_drop = [
+        "system_audit_logs", "legal_dispositions", "temperature_logs",
+        "lab_analysis", "chain_of_custody", "case_evidence_map",
+        "evidence", "storage_locations", "cases", "personnel"
+    ]
+    for table in tables_to_drop:
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+
+    print("Building tables...")
+
     print("Building tables...")
 
     cursor.execute("""
@@ -160,7 +172,6 @@ def initialize_database():
         result_message TEXT,
         status VARCHAR(50), -- 'Pass' or 'Fail'
         audit_time DATETIME,
-        -- Add this line to create the formal link:
         FOREIGN KEY (evidence_id) REFERENCES evidence(evidence_id)
     )
     """)
