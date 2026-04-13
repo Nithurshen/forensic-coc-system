@@ -2,8 +2,6 @@
 
 This project is a high-integrity **Forensic Evidence Management System** designed to track physical and digital evidence from the moment of intake through its entire legal lifecycle. By utilizing cryptographic hashing and a linked-ledger architecture, the system ensures that the **Chain of Custody (CoC)** remains immutable and tamper-evident, meeting the rigorous standards required for court-admissible reporting.
 
----
-
 ## Key Features
 
 * **Cryptographic Ledger**: Every transfer of custody is hashed and linked to the previous record, creating a mathematical "chain" that detects any unauthorized database tampering.
@@ -13,8 +11,6 @@ This project is a high-integrity **Forensic Evidence Management System** designe
 * **Facility Management**: Tracks evidence across various specialized environments, including biohazard refrigerators, Faraday lockers, and vehicle impounds.
 * **Audit Dashboard**: Real-time overview of total cases, pending lab requests, and items requiring immediate attention (e.g., items in temporary holding).
 
----
-
 ## Tech Stack
 
 * **Frontend**: Streamlit (Python-based Web UI)
@@ -23,16 +19,12 @@ This project is a high-integrity **Forensic Evidence Management System** designe
 * **Reporting**: `fpdf` (PDF generation)
 * **Environment**: `python-dotenv` for secure credential management
 
----
-
 ## Prerequisites
 
 Before running the system, ensure you have the following installed:
 * Python 3.8+
 * MySQL Server
 * A tool to manage Python environments (like `venv` or `conda`)
-
----
 
 ## Installation & Setup
 
@@ -64,8 +56,6 @@ Run the reset script to create the database schema and populate initial storage 
 python reset_system.py
 ```
 
----
-
 ## Usage Guide
 
 ### 1. Launch the Application
@@ -93,8 +83,6 @@ streamlit run app.py
 * Select **Audit & Verify Ledger**.
 * Enter an Evidence ID to trigger a full cryptographic audit.
 * If the chain is intact, click **Download Court Report (PDF)** to generate the official documentation.
-
----
 
 ## License
 This project is licensed under the **Apache License 2.0**. You may obtain a copy of the License at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0). See the `LICENSE` file for details on permissions and limitations.
