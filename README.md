@@ -54,7 +54,7 @@ By utilizing a linked-ledger architecture (similar to a blockchain) and SHA-256 
 * **Database:** MySQL (Relational storage mapped with strict Foreign Keys)
 * **Security & Crypto:** `bcrypt` (Passwords), `hashlib` (SHA-256 Ledger & File Hashing)
 * **Reporting:** `fpdf` (Automated PDF generation)
-* [cite_start]**Environment Setup:** `python-dotenv` [cite: 5]
+* **Environment Setup:** `python-dotenv`
 
 ## ⚙️ Installation & Setup
 
