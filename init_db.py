@@ -184,6 +184,56 @@ def initialize_database():
     )
     """)
 
+    print("Building stored procedures, functions, and triggers...")
+
+    cursor.execute("DROP TRIGGER IF EXISTS After_CaseUpdate")
+    cursor.execute("DROP PROCEDURE IF EXISTS Log_TemperatureAlert")
+    cursor.execute("DROP FUNCTION IF EXISTS GetCurrentLocation")
+
+    cursor.execute("""
+    CREATE TRIGGER After_CaseUpdate
+    AFTER UPDATE ON cases
+    FOR EACH ROW
+    BEGIN
+        IF OLD.status != NEW.status THEN
+            INSERT INTO system_audit_logs (evidence_id, result_message, status, audit_time)
+            VALUES ('SYSTEM', CONCAT('Case ', NEW.case_id, ' status changed to ', NEW.status), 'Pass', NOW());
+        END IF;
+    END;
+    """)
+
+    cursor.execute("""
+    CREATE PROCEDURE Log_TemperatureAlert(
+        IN p_loc_id VARCHAR(100),
+        IN p_temp DECIMAL(5,2)
+    )
+    BEGIN
+        DECLARE v_alert_flag BOOLEAN;
+        
+        IF p_temp > -10.0 THEN
+            SET v_alert_flag = TRUE;
+        ELSE
+            SET v_alert_flag = FALSE;
+        END IF;
+        
+        INSERT INTO temperature_logs (location_id, recorded_at, temperature_celsius, alert_triggered)
+        VALUES (p_loc_id, NOW(), p_temp, v_alert_flag);
+    END;
+    """)
+
+    cursor.execute("""
+    CREATE FUNCTION GetCurrentLocation(p_ev_id VARCHAR(255))
+    RETURNS VARCHAR(100)
+    DETERMINISTIC
+    BEGIN
+        DECLARE v_loc VARCHAR(100);
+        SELECT current_location_id INTO v_loc
+        FROM evidence
+        WHERE evidence_id = p_ev_id;
+        RETURN v_loc;
+    END;
+    """)
+
     conn.commit()
     conn.close()
     print("Complete MySQL Forensic Schema initialized successfully!")

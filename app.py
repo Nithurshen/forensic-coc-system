@@ -150,14 +150,18 @@ if menu == "Dashboard":
             st.dataframe(df_reg, use_container_width=True, height=350, hide_index=True)
         else:
             st.info("No items found in the registry.")
-            
+
     with dash_col3:
         st.subheader("📂 All Cases")
         all_cases = db_manager.get_all_cases()
         if all_cases:
             df_cases = pd.DataFrame(all_cases)
-            df_cases.columns = [col.replace("_", " ").title() for col in df_cases.columns]
-            st.dataframe(df_cases, use_container_width=True, height=350, hide_index=True)
+            df_cases.columns = [
+                col.replace("_", " ").title() for col in df_cases.columns
+            ]
+            st.dataframe(
+                df_cases, use_container_width=True, height=350, hide_index=True
+            )
         else:
             st.info("No cases have been created.")
 
@@ -286,12 +290,16 @@ elif menu == "Transfer Custody":
 elif menu == "Manage Cases":
     st.subheader("📂 Case Management")
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Create New Case", "Update Case", "Link Evidence to Case", "View Linked Cases"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["Create New Case", "Update Case", "Link Evidence to Case", "View Linked Cases"]
+    )
 
     with tab1:
         with st.form("new_case_form"):
             case_id = st.text_input("Case ID (e.g., CASE-2026-001)")
-            lead_inv = st.selectbox("Lead Investigator", options=list(officer_options.keys()))
+            lead_inv = st.selectbox(
+                "Lead Investigator", options=list(officer_options.keys())
+            )
             status = st.selectbox("Status", ["Open", "Under Review", "Closed"])
             submit_case = st.form_submit_button("Create Case")
 
@@ -305,29 +313,40 @@ elif menu == "Manage Cases":
                     st.success(f"Case {case_id} created successfully!")
                 else:
                     st.error("Failed to create case. ID might already exist.")
-                    
+
     with tab2:
         st.info("Update the status or lead investigator of an existing case.")
         cases = db_manager.get_all_cases()
-        
+
         if not cases:
             st.warning("No cases available to update.")
         else:
-            update_case_options = {f"{c['case_id']} (Current Status: {c['status']})": c["case_id"] for c in cases}
-            
+            update_case_options = {
+                f"{c['case_id']} (Current Status: {c['status']})": c["case_id"]
+                for c in cases
+            }
+
             with st.form("update_case_form"):
-                sel_update_case = st.selectbox("Select Case to Update", options=list(update_case_options.keys()))
-                new_status = st.selectbox("New Status", ["Open", "Under Review", "Closed"])
-                new_lead_inv = st.selectbox("New Lead Investigator", options=list(officer_options.keys()))
-                
+                sel_update_case = st.selectbox(
+                    "Select Case to Update", options=list(update_case_options.keys())
+                )
+                new_status = st.selectbox(
+                    "New Status", ["Open", "Under Review", "Closed"]
+                )
+                new_lead_inv = st.selectbox(
+                    "New Lead Investigator", options=list(officer_options.keys())
+                )
+
                 update_submit = st.form_submit_button("Update Case")
-                
+
                 if update_submit:
                     case_id_to_update = update_case_options[sel_update_case]
                     new_badge = officer_options[new_lead_inv]
-                    
+
                     if db_manager.update_case(case_id_to_update, new_status, new_badge):
-                        st.success(f"Case {case_id_to_update} updated successfully! Refresh to see changes on other tabs.")
+                        st.success(
+                            f"Case {case_id_to_update} updated successfully! Refresh to see changes on other tabs."
+                        )
                     else:
                         st.error("Failed to update case.")
 
@@ -348,18 +367,22 @@ elif menu == "Manage Cases":
                     st.success(f"Evidence linked to {sel_case} successfully.")
                 else:
                     st.error("Failed to link evidence.")
-    
+
     with tab4:
         st.info("Check which cases a specific piece of evidence is tied to.")
-        
-        view_ev = st.selectbox("Select Evidence to Inspect", options=list(ev_options.keys()))
-        
+
+        view_ev = st.selectbox(
+            "Select Evidence to Inspect", options=list(ev_options.keys())
+        )
+
         if st.button("Find Linked Cases"):
             linked_cases = db_manager.get_cases_for_evidence(ev_options[view_ev])
-            
+
             if linked_cases:
                 df_linked = pd.DataFrame(linked_cases)
-                df_linked.columns = [col.replace("_", " ").title() for col in df_linked.columns]
+                df_linked.columns = [
+                    col.replace("_", " ").title() for col in df_linked.columns
+                ]
                 st.dataframe(df_linked, hide_index=True, use_container_width=True)
             else:
                 st.warning("No cases are currently linked to this evidence.")
@@ -396,19 +419,23 @@ elif menu == "Lab & Forensics":
 
     with tab2:
         st.info("Update an existing lab request with final results.")
-        
+
         pending_requests = db_manager.get_pending_lab_requests()
-        
+
         if not pending_requests:
             st.warning("There are currently no pending lab requests to update.")
         else:
             req_options = {
-                f"Req #{r['request_id']} - {r['test_type']} ({r['evidence_id']})": r['request_id'] 
+                f"Req #{r['request_id']} - {r['test_type']} ({r['evidence_id']})": r[
+                    "request_id"
+                ]
                 for r in pending_requests
             }
-            
+
             with st.form("lab_result_form"):
-                selected_req = st.selectbox("Select Pending Lab Request", options=list(req_options.keys()))
+                selected_req = st.selectbox(
+                    "Select Pending Lab Request", options=list(req_options.keys())
+                )
                 summary = st.text_area("Result Summary")
                 file_path = st.text_input(
                     "Report File Path (e.g., /network/drives/reports/rep_01.pdf)"
@@ -418,7 +445,7 @@ elif menu == "Lab & Forensics":
 
                 if submit_res:
                     request_id = req_options[selected_req]
-                    
+
                     if db_manager.update_lab_results(
                         request_id, summary, file_path, equipment
                     ):
@@ -472,7 +499,7 @@ elif menu == "Environmental Monitoring":
     st.write("Manually log temperatures for sensitive storage (Biologics, Chemicals).")
 
     locations = db_manager.get_temp_monitored_locations()
-    
+
     if not locations:
         st.warning("No facilities currently registered require temperature monitoring.")
     else:
@@ -485,7 +512,9 @@ elif menu == "Environmental Monitoring":
             target_loc = st.selectbox(
                 "Storage Location", options=list(location_options.keys())
             )
-            temp_val = st.number_input("Recorded Temperature (°C)", value=-20.0, step=0.5)
+            temp_val = st.number_input(
+                "Recorded Temperature (°C)", value=-20.0, step=0.5
+            )
             submit_temp = st.form_submit_button("Log Temperature")
 
             if submit_temp:
