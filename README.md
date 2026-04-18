@@ -94,7 +94,15 @@ Start the secure Streamlit web interface:
 streamlit run app.py
 ```
 
----
+## 📚 References & Resources
+
+This project was built using the following tools and libraries. We referred to their official documentation during development:
+
+* **Streamlit Documentation (Frontend Framework):** [https://docs.streamlit.io/](https://docs.streamlit.io/)
+* **MySQL Python Connector Official Guide:** [https://dev.mysql.com/doc/connector-python/en/](https://dev.mysql.com/doc/connector-python/en/)
+* **Python hashlib (SHA-256 Cryptography):** [https://docs.python.org/3/library/hashlib.html](https://docs.python.org/3/library/hashlib.html)
+* **FPDF Library (Automated Reporting):** [https://pyfpdf.readthedocs.io/](https://pyfpdf.readthedocs.io/)
+* **Bcrypt Library (Password Hashing):** [https://pypi.org/project/bcrypt/](https://pypi.org/project/bcrypt/)
 
 ## 📄 License
 
