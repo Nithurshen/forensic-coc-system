@@ -476,3 +476,44 @@ def get_full_storage_locations():
     results = cursor.fetchall()
     conn.close()
     return results
+
+def get_temp_monitored_locations():
+    """Fetches only locations that require temperature monitoring."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT location_id, facility_name, room_number FROM storage_locations WHERE requires_temp_monitoring = TRUE"
+    )
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+def get_pending_lab_requests():
+    """Fetches all lab requests that are currently pending."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT request_id, evidence_id, test_type, request_date FROM lab_analysis WHERE status = 'Pending'")
+    results = cursor.fetchall()
+    conn.close()
+    return results
+
+def update_case(case_id, new_status, new_lead_badge):
+    """Updates the status and lead investigator of an existing case."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE cases 
+            SET status = %s, lead_investigator_badge = %s
+            WHERE case_id = %s
+        """,
+            (new_status, new_lead_badge, case_id)
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    except mysql.connector.Error as e:
+        print(f"DB Error updating case: {e}")
+        return False
+    finally:
+        conn.close()
