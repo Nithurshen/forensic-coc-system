@@ -1,6 +1,8 @@
 mysql-connector
 python-dotenv
 cryptography
+streamlit
+pandas
 ruff
 fpdf
 bcrypt
