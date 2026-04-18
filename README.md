@@ -27,16 +27,17 @@ By utilizing a linked-ledger architecture (similar to a blockchain) and SHA-256 
 
 ### 📂 Case & Investigation Management
 * **Case Creation:** Open and track cases with assigned lead investigators and status monitoring (Open, Under Review, Closed).
+* **Case Updating:** Modify existing case statuses and reassign lead investigators as investigations progress.
 * **Many-to-Many Evidence Linking:** Link a single piece of evidence to multiple cases or multiple pieces of evidence to a single case using a relational junction mapping.
 * **Cross-Referencing View:** Instantly query a piece of evidence to view every active or closed case it is associated with.
 
 ### 🔬 Lab & Forensics Tracking
 * **Analysis Queuing:** Submit specific lab requests (DNA Profiling, Ballistics, Toxicology, Digital Forensics) directly to the lab queue.
-* **Result Logging:** Update pending requests with result summaries, equipment used (e.g., GC-MS Spectrometer), and file paths to network-stored forensic reports.
+* **Result Logging:** Dynamically fetch currently pending requests to update with result summaries, equipment used (e.g., GC-MS Spectrometer), and file paths to network-stored forensic reports.
 
 ### 🌡️ Facility & Environmental Management
 * **Dynamic Facility Registration:** Add new secure storage locations (e.g., Deep Freezers, Faraday Lockers, Vehicle Impounds, Biohazard Refrigerators).
-* **Temperature Logging:** Manually log environmental temperatures for sensitive biological or chemical storage.
+* **Smart Temperature Logging:** Manually log environmental temperatures via a filtered interface that only displays locations explicitly requiring climate monitoring.
 * **Automated Threshold Alerts:** System triggers visual warnings if recorded temperatures exceed safe limits for specific storage types (e.g., > -10.0°C for deep freezes).
 
 ### ⚖️ Legal Dispositions
@@ -44,7 +45,8 @@ By utilizing a linked-ledger architecture (similar to a blockchain) and SHA-256 
 * **Two-Officer Authorization:** Requires both an authorizing officer and a witnessing officer (mandatory for evidence destruction), alongside court order reference numbers.
 
 ### 📊 Real-Time Dashboard
-* **System Overview:** Live metrics on total cases, evidence logged, and pending lab requests.
+* **System Overview Metrics:** Live counts on total cases, evidence logged, and pending lab requests.
+* **Comprehensive Multi-Column View:** Simultaneously view actionable lists of Pending Lab Requests, the Full Evidence Registry, and All Cases directly on the home dashboard.
 * **Searchable Registry:** Quickly locate evidence by ID or description.
 * **"Needs Attention" Flagging:** Automatically highlights evidence currently sitting in insecure "Temporary Holding" or items that have failed a cryptographic integrity audit.
 
