@@ -572,7 +572,7 @@ elif menu == "Audit & Verify Ledger":
 
             df_report = pd.DataFrame(report)
             st.dataframe(
-                df_report.style.applymap(
+                df_report.style.map(
                     lambda x: (
                         "background-color: #ffcccc; color: black;"
                         if x == "Fail"
