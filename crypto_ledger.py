@@ -1,6 +1,6 @@
 import hashlib
 import json
-import db_manager
+import init_db
 import datetime
 import os
 from dotenv import load_dotenv
