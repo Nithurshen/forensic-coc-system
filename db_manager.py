@@ -1,24 +1,13 @@
 import mysql.connector
 from dotenv import load_dotenv
 import os
+from init_db import get_connection
 
 load_dotenv()
 
-
-def get_db_connection():
-    """Establish connection to the MySQL server using environment variables."""
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        auth_plugin="mysql_native_password",
-    )
-
-
 def get_latest_hash(evidence_id):
     """Fetches the CurrentHash of the most recent transfer for a specific item."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
@@ -39,7 +28,7 @@ def get_latest_hash(evidence_id):
 
 def insert_transfer(payload):
     """Inserts a newly hashed transfer payload into the MySQL database."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -71,7 +60,7 @@ def insert_transfer(payload):
 
 def insert_personnel(badge, first, last, dept, clearance):
     """Helper function to seed the database with users."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -92,7 +81,7 @@ def insert_personnel(badge, first, last, dept, clearance):
 
 def get_all_personnel():
     """Fetches personnel for Streamlit Dropdowns."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT badge_number, first_name, last_name FROM personnel")
     results = cursor.fetchall()
@@ -102,7 +91,7 @@ def get_all_personnel():
 
 def insert_storage_location(location_id, facility, room, storage_type, req_temp):
     """Adds a new storage location (e.g., Freezer A)."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -123,7 +112,7 @@ def insert_storage_location(location_id, facility, room, storage_type, req_temp)
 
 def get_all_storage_locations():
     """Fetches storage locations for Streamlit Dropdowns."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT location_id, facility_name, room_number FROM storage_locations"
@@ -134,7 +123,7 @@ def get_all_storage_locations():
 
 
 def insert_case(case_id, investigator_badge, status, created_at):
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -154,7 +143,7 @@ def insert_case(case_id, investigator_badge, status, created_at):
 
 
 def get_all_cases():
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT case_id, status FROM cases")
     results = cursor.fetchall()
@@ -163,7 +152,7 @@ def get_all_cases():
 
 
 def insert_evidence(payload):
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -195,7 +184,7 @@ def insert_evidence(payload):
 
 def get_all_evidence():
     """Fetches evidence items to populate the Transfer Custody dropdown."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT evidence_id, description FROM evidence")
     results = cursor.fetchall()
@@ -205,7 +194,7 @@ def get_all_evidence():
 
 def link_evidence_to_case(case_id, evidence_id, linked_by_badge, notes):
     """Junction table insert: Links one piece of evidence to multiple cases."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -226,7 +215,7 @@ def link_evidence_to_case(case_id, evidence_id, linked_by_badge, notes):
 
 def log_lab_analysis_request(evidence_id, requested_by_badge, test_type):
     """Requests a lab test (e.g., DNA, Toxicology) for an item."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -249,7 +238,7 @@ def log_legal_disposition(
     evidence_id, action_type, authorized_by_badge, witnessed_by_badge, court_order
 ):
     """Update to include the required witness parameter."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -276,7 +265,7 @@ def log_legal_disposition(
 
 def get_full_chain_of_custody(evidence_id):
     """Fetches the CoC history with actual officer names for court reporting."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         """
@@ -299,7 +288,7 @@ def get_full_chain_of_custody(evidence_id):
 
 def get_dashboard_stats():
     """Returns counts for the main UI dashboard."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     stats = {}
 
@@ -318,7 +307,7 @@ def get_dashboard_stats():
 
 def search_evidence(search_query):
     """Allows searching evidence by description or ID."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     query = "SELECT * FROM evidence WHERE evidence_id LIKE %s OR description LIKE %s"
     params = (f"%{search_query}%", f"%{search_query}%")
@@ -330,7 +319,7 @@ def search_evidence(search_query):
 
 def get_cases_for_evidence(evidence_id):
     """Retrieves all cases linked to a specific piece of evidence (Junction Query)."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     query = """
         SELECT c.* FROM cases c
@@ -345,7 +334,7 @@ def get_cases_for_evidence(evidence_id):
 
 def log_audit_result(evidence_id, result_message, status):
     """Logs the results of a cryptographic integrity check."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -362,7 +351,7 @@ def log_audit_result(evidence_id, result_message, status):
 
 def update_lab_results(request_id, summary, file_path, equipment):
     """Updates a pending lab request with final results."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -382,7 +371,7 @@ def update_lab_results(request_id, summary, file_path, equipment):
 
 def log_temperature(location_id, temp):
     """Records a temperature reading for environmental evidence preservation."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     alert = True if temp > -10.0 else False
     try:
@@ -400,7 +389,7 @@ def log_temperature(location_id, temp):
 
 def insert_personnel(badge, username, password_hash, first, last, dept, clearance):
     """Helper function to create new officer accounts."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -423,7 +412,7 @@ def authenticate_officer(username, password_str):
     """Checks credentials and returns the user record if valid."""
     import crypto_ledger
 
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT * FROM personnel WHERE username = %s AND status = 'Active'", (username,)
@@ -438,7 +427,7 @@ def authenticate_officer(username, password_str):
 
 def get_full_evidence_registry():
     """Fetches all evidence fields for the dashboard registry display."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT evidence_id, item_type, description, current_location_id FROM evidence"
@@ -450,7 +439,7 @@ def get_full_evidence_registry():
 
 def get_items_needing_attention():
     """Fetches items in temporary/improvised storage or with failed cryptographic audits."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     query = """
         SELECT e.evidence_id, e.description, l.storage_type AS current_security_status
@@ -470,7 +459,7 @@ def get_items_needing_attention():
 
 def get_full_storage_locations():
     """Fetches all storage location data for the management UI."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM storage_locations")
     results = cursor.fetchall()
@@ -480,7 +469,7 @@ def get_full_storage_locations():
 
 def get_temp_monitored_locations():
     """Fetches only locations that require temperature monitoring."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT location_id, facility_name, room_number FROM storage_locations WHERE requires_temp_monitoring = TRUE"
@@ -492,7 +481,7 @@ def get_temp_monitored_locations():
 
 def get_pending_lab_requests():
     """Fetches all lab requests that are currently pending."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT request_id, evidence_id, test_type, request_date FROM lab_analysis WHERE status = 'Pending'"
@@ -504,7 +493,7 @@ def get_pending_lab_requests():
 
 def update_case(case_id, new_status, new_lead_badge):
     """Updates the status and lead investigator of an existing case."""
-    conn = get_db_connection()
+    conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
