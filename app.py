@@ -129,7 +129,7 @@ if menu == "Dashboard":
     st.subheader("System Overview")
     stats = db_manager.get_dashboard_stats()
 
-    dash_col1, dash_col2, dash_col3 = st.columns(3)
+    dash_col1, dash_col2, dash_col3, dash_col4 = st.columns(4)
 
     with dash_col1:
         st.subheader("🧪 Pending Labs")
@@ -142,6 +142,20 @@ if menu == "Dashboard":
             st.success("No pending lab requests.")
 
     with dash_col2:
+        st.subheader("⚠️ Needs Attention")
+        attention_items = db_manager.get_items_needing_attention()
+        if attention_items:
+            df_attn = pd.DataFrame(attention_items)
+            df_attn.columns = [
+                col.replace("_", " ").title() for col in df_attn.columns
+            ]
+            st.dataframe(
+                df_attn, use_container_width=True, height=350, hide_index=True
+            )
+        else:
+            st.success("All evidence is secure. No attention needed.")
+
+    with dash_col3:
         st.subheader("📋 All Evidence")
         ev_registry = db_manager.get_full_evidence_registry()
         if ev_registry:
@@ -151,7 +165,7 @@ if menu == "Dashboard":
         else:
             st.info("No items found in the registry.")
 
-    with dash_col3:
+    with dash_col4:
         st.subheader("📂 All Cases")
         all_cases = db_manager.get_all_cases()
         if all_cases:
