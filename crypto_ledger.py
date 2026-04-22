@@ -48,7 +48,7 @@ def verify_evidence_ledger(evidence_id):
     Audits the entire chain of custody for a single piece of evidence.
     Recalculates every hash to mathematically prove the database hasn't been tampered with.
     """
-    conn = db_manager.get_db_connection()
+    conn = db_manager.get_connection()
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
