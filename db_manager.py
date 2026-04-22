@@ -57,28 +57,6 @@ def insert_transfer(payload):
     finally:
         conn.close()
 
-
-def insert_personnel(badge, first, last, dept, clearance):
-    """Helper function to seed the database with users."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            """
-            INSERT INTO personnel (badge_number, first_name, last_name, department, clearance_level)
-            VALUES (%s, %s, %s, %s, %s)
-        """,
-            (badge, first, last, dept, clearance),
-        )
-        conn.commit()
-        return True
-    except mysql.connector.Error as e:
-        print(f"DB Error inserting personnel: {e}")
-        return False
-    finally:
-        conn.close()
-
-
 def get_all_personnel():
     """Fetches personnel for Streamlit Dropdowns."""
     conn = get_connection()
