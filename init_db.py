@@ -50,8 +50,6 @@ def initialize_database():
 
     print("Building tables...")
 
-    print("Building tables...")
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS personnel (
         badge_number VARCHAR(50) PRIMARY KEY,
